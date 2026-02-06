@@ -1,0 +1,3450 @@
+NOTE: PROCEDURE PRINTTO used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+NOTE: Writing log to 
+C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submissi
+on data files/Logs/dm_chracters.log
+233  
+234  /*=========================================================
+235  set Input and output
+236  =========================================================*/
+237  %let PROGDIR  = &ROOT.\Programs\production\table\;
+238  %let outputpath= &ROOT.\Outputs\table;
+239  
+240  data adsl01;
+241     set adsl;
+ERROR: File WORK.ADSL.DATA does not exist.
+242     where saffl="Y";
+243  run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.ADSL01 may be incomplete.  When this step was stopped there were 0 
+         observations and 0 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+244  proc contents data=adsl01 varnum; run;
+NOTE: Writing HTML Body file: sashtml.htm
+
+NOTE: PROCEDURE CONTENTS used (Total process time):
+      real time           0.36 seconds
+      cpu time            0.04 seconds
+      
+
+245  
+246  data adsl01;
+247     set adsl;
+ERROR: File WORK.ADSL.DATA does not exist.
+248  /*   where saffl="Y";*/
+249  run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.ADSL01 may be incomplete.  When this step was stopped there were 0 
+         observations and 0 variables.
+WARNING: Data set WORK.ADSL01 was not replaced because this step was stopped.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+250  
+251  data adsl01;
+252     set adsl;
+ERROR: File WORK.ADSL.DATA does not exist.
+253  /*   where saffl="Y";*/
+254  run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.ADSL01 may be incomplete.  When this step was stopped there were 0 
+         observations and 0 variables.
+WARNING: Data set WORK.ADSL01 was not replaced because this step was stopped.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+255  proc contents data=adsl01 varnum; run;
+
+NOTE: PROCEDURE CONTENTS used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+256  
+257  data adsl01;
+258     set adam.adsl;
+259  /*   where saffl="Y";*/
+260  run;
+
+NOTE: There were 254 observations read from the data set ADAM.ADSL.
+NOTE: The data set WORK.ADSL01 has 254 observations and 48 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+      
+
+261  proc contents data=adsl01 varnum; run;
+
+NOTE: PROCEDURE CONTENTS used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+      
+
+262  
+263  /*=========================================================
+264  Read input datasets
+265  =========================================================*/
+266  
+267  
+268  data adsl01;
+269     set adam.adsl;
+270     where ITTFL="Y";     /*using itt*/
+271  run;
+
+NOTE: There were 254 observations read from the data set ADAM.ADSL.
+      WHERE ITTFL='Y';
+NOTE: The data set WORK.ADSL01 has 254 observations and 48 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+272  
+273  /*=========================================================
+274  Create a variable named 'treatment' to hold report level column groupings<br/>
+275  Also create duplicate rows for presenting total column
+276  =========================================================*/
+277  
+278  data adsl02;
+279     set adsl01;
+280  
+281     treatment=trt01an;
+282     output;
+283     treatment=98;  /*3 is overall */
+284     output;
+285  run;
+
+NOTE: There were 254 observations read from the data set WORK.ADSL01.
+NOTE: The data set WORK.ADSL02 has 508 observations and 49 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+286  
+287  /*=========================================================
+288  Create formats for preloading to create full template for sparse data
+289  =========================================================*/
+290  
+291  /*----------------------------------------------------------
+292  Notice the creation of numeric and character formats for categorical variables
+293  ----------------------------------------------------------*/
+294  
+295  
+296  proc format;
+297  /*   value treatment*/
+298  /*      1=1*/
+299  /*      2=2*/
+300  /*      3=3*/
+301  /*4=4;*/
+302  /* */
+303  /*   value sexn*/
+304  /*      99=99*/
+305  /*      1=1*/
+306  /*      2=2;*/
+307  /* */
+308  /*   value aracen*/
+309  /*      99=99*/
+310  /*      1=1*/
+311  /*      2=2*/
+312  /*      3=3*/
+313  /*      4=4;*/
+314  
+315     value sexn_disp
+316        99="Missing"
+317        1="Male"
+318        2="Female";
+NOTE: Format SEXN_DISP has been output.
+319  
+320     value aracen_disp
+321        99="Missing"
+322        1="White"
+323        2="Black or African American"
+324        3="Asian"
+325        4="Other";
+NOTE: Format ARACEN_DISP has been output.
+326  
+327       invalue $genderfmt     /*invalue for text */
+328        "M" = 1
+329        "F" = 2;
+NOTE: Informat $GENDERFMT has been output.
+330  
+331           invalue $racefmt     /*invalue for text */
+332        "WHITE" = 1
+333        "BLACK OR AFRICAN AMERICAN" = 2
+334  "AMERICAN INDIAN OR ALASKA NATIVE" = 3;
+NOTE: Informat $RACEFMT has been output.
+335  run;
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+336  
+337  
+338  /*=========================================================
+339  ```````Create numeric variables for categorical variables, also setting them to 0 for missing
+339!  values
+340  =========================================================*/
+341  
+342  
+343  data adsl03;
+344     set adsl02;
+345     keep usubjid treatment sexn  aracen age weightbl  heightbl  bmibl ;
+346  sexn=input(input(sex, $genderfmt.),8.);
+347  aracen=input(input(race,$racefmt.),8.);
+348     if missing(sexn) then sexn=99;
+349     if missing(aracen) then aracen=99;    /*if missing*/*/;
+350  run;
+
+NOTE: There were 508 observations read from the data set WORK.ADSL02.
+NOTE: The data set WORK.ADSL03 has 508 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+351  /* proc contents data=adsl03 varnum;run; */
+352  /*proc freq data=adsl02 ;*/
+353  /*table sex race;*/
+354  /*run;  */
+355  
+356  /*=========================================================
+357  Get treatment totals into a dataset and into macro variables(for column headers)
+358  =========================================================*/
+359  
+360  /*----------------------------------------------------------
+361  Get treatment `````````` totals based on actual data
+362  ----------------------------------------------------------*/
+363  proc sql;
+364     create table trttotal_pre as
+365        select treatment  ,
+366        count(distinct usubjid)    as trttotal   /*calculate the n of three groups*/
+367        from adsl02
+368        group by treatment;
+NOTE: Table WORK.TRTTOTAL_PRE created, with 4 rows and 2 columns.
+
+369  quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+
+370  
+371  /*----------------------------------------------------------
+372  Create dummy dataset for treatement totals
+373  ----------------------------------------------------------*/
+374  
+375  data dummy_pre;
+376     do treatment=0,54,81,98;
+377        output;
+378     end;
+379  run;
+
+NOTE: The data set WORK.DUMMY_PRE has 4 observations and 1 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+380  
+381  /*----------------------------------------------------------
+382  Merge actual counts with dummt counts
+383  ----------------------------------------------------------*/
+384  
+385  data trttotals;
+386     merge dummy_pre(in=a)  trttotal_pre(in=b);
+387     by treatment;
+388     if trttotal=. then trttotal=0;
+389  run;
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.TRTTOTAL_PRE.
+NOTE: The data set WORK.TRTTOTALS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+390  
+391  
+392  /*----------------------------------------------------------
+393  Create macro variables to present treatment totals in column headers of report
+394  ----------------------------------------------------------*/
+395  
+396  proc sql noprint;
+397     select count(distinct usubjid) into :n1 from adsl02 where treatment=0;
+398     select count(distinct usubjid) into :n2 from adsl02 where treatment=54;
+399     select count(distinct usubjid) into :n3 from adsl02 where treatment=81;
+400     select count(distinct usubjid) into :n4 from adsl02 where treatment=98;
+400!                                                                             /*create three
+400! macro variables*/
+401  quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+402  
+403  /*=========================================================
+404  Create a macro for obtaining counts and percentages for ````````categorical variables
+405  =========================================================*/
+406  
+407  /*----------------------------------------------------------
+408  Macro flow: <br/>
+409  Obtain non-missing values as denominator<br/>
+410  Obtain level counts using proc summary using completetypes,preloadfmt and nway options<br/>
+411  Merge level counts with denominator counts<br/>
+412  Calculate percentages<br/>
+413  Transpose the dataset to get treatments as columns<br/>
+414  ----------------------------------------------------------*/
+415  
+416  
+417  %macro count_percent(var=,
+418                  label=,
+419                  group=
+420                 );
+421  
+422  *-------------------------------------------;
+423  *obtain non-missing values as denominator;
+424  *-------------------------------------------;
+425  /* %let var=sexn;*/
+426  /*           %let  label=%str(Sex);*/
+427  /*            %let  group=1;*/
+428  
+429  proc sql;
+430     create table &var._denoms as
+431     select treatment,count(distinct usubjid) as denom
+432     from adsl03
+433     where &var not in (., 99)
+434     group by treatment
+435     order by treatment;
+436  quit;
+437  
+438  data &var.denoms;
+439     merge dummy_pre &var._denoms;
+440     by treatment;
+441     if denom =. then denom=0;
+442  run;
+443  
+444  *-------------------------------------------;
+445  *obtain level counts using proc summary using completetypes,preloadfmt and nway options;
+446  *-------------------------------------------;
+447  
+448  proc summary data=adsl03 completetypes nway;
+449     class treatment /preloadfmt;
+450     class &var./preloadfmt;
+451     where not missing(&var.);
+452  /*   format  &var. &var.. treatment treatment.;*/
+453     output out=&var._stats(drop=_type_ rename=(_freq_=count));
+454  run;
+455  
+456  *---------------------------------------;
+457  *merge level counts with denominator counts;
+458  *---------------------------------------;
+459  
+460  *numerator counts;
+461  
+462  proc sort data=&var._stats;
+463     by treatment ;
+464  run;
+465  
+466  *denominator counts;
+467  
+468  proc sort data=&var._denoms;
+469     by treatment ;
+470  run;
+471  
+472  data &var._stats2;
+473     merge &var._stats &var._denoms;
+474     by treatment ;
+475  run;
+476  
+477  *-----------------------------------------------;
+478  *calculate percentages;
+479  *-----------------------------------------------;
+480  
+481  data &var._stats3;
+482     set &var._stats2;
+483     length label statistic $50 cp $20;
+484  
+485     label="&label.";
+486     group=&group.;
+487  
+488     intord=&var.;
+489  
+490     statistic=put(&var.,&var._disp.);    /*use sex or race format*/
+491  
+492  
+493     if count ne 0 and intord ne 99 then cp=put(count,3.)|| '
+493! ('||put(round(count*100/denom,0.1),5.1)||'%)';
+494     else cp=put(count,3.);
+495  
+496  run;
+497  
+498  *-----------------------------------------------;
+499  *Transpose the dataset to get treatments as columns;
+500  *-----------------------------------------------;
+501  
+502  proc sort data=&var._stats3;
+503     by  group intord label statistic;
+504  run;
+505  
+506  proc transpose data=&var._stats3 out=&var._stats4;
+507     by  group intord label statistic;
+508     var cp;
+509     id treatment;
+510  run;
+511  
+512  /*proc contents data= sexn_stats4 varnum;*/
+513  /*run; */
+514  
+515  data final_stats_&var.;
+516     length c1-c6 $200;    /*three groups*/
+517     set &var._stats4;
+518     if intord=0 and compress(_3)="0" then delete;
+519     c1=label;
+520     c2=statistic;
+521     c3=_0;
+522     c4=_54;
+523     c5=_81;
+524     c6=_98;
+525  
+526     keep group  intord c1-c6 ;
+527  run;
+528  
+529  proc sort data=final_stats_&var.;
+530     by  group intord;
+531  run;
+532  %mend;
+533  
+534  
+535  /*=========================================================
+536  Call the macro to get counts and percentages for sex and race variables
+537  =========================================================*/
+538  /*----------------------------------------------------------
+539  Notice the creation of group and order variables within macro
+540  ----------------------------------------------------------*/
+541  %count_percent(var=sexn,
+542              label=%str(Sex),
+543               group=1
+544              );
+NOTE: Table WORK.SEXN_DENOMS created, with 4 rows and 2 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.SEXN_DENOMS.
+NOTE: The data set WORK.SEXNDENOMS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+WARNING: The format for variable TREATMENT cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+WARNING: The format for variable SEXN cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(sexn);
+NOTE: The data set WORK.SEXN_STATS has 8 observations and 3 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS.
+NOTE: The data set WORK.SEXN_STATS has 8 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Input data set is already sorted, no sorting done.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS.
+NOTE: There were 4 observations read from the data set WORK.SEXN_DENOMS.
+NOTE: The data set WORK.SEXN_STATS2 has 8 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS2.
+NOTE: The data set WORK.SEXN_STATS3 has 8 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS3.
+NOTE: The data set WORK.SEXN_STATS3 has 8 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS3.
+NOTE: The data set WORK.SEXN_STATS4 has 2 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      935:96   
+NOTE: Variable _3 is uninitialized.
+NOTE: There were 2 observations read from the data set WORK.SEXN_STATS4.
+NOTE: The data set WORK.FINAL_STATS_SEXN has 2 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 2 observations read from the data set WORK.FINAL_STATS_SEXN.
+NOTE: The data set WORK.FINAL_STATS_SEXN has 2 observations and 8 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+545  
+546  
+547  %count_percent(var=aracen,
+548              label=%str(Race),
+549               group=2
+550              );
+NOTE: Table WORK.ARACEN_DENOMS created, with 4 rows and 2 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.ARACEN_DENOMS.
+NOTE: The data set WORK.ARACENDENOMS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+WARNING: The format for variable TREATMENT cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+WARNING: The format for variable ARACEN cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(aracen);
+NOTE: The data set WORK.ARACEN_STATS has 12 observations and 3 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS.
+NOTE: The data set WORK.ARACEN_STATS has 12 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Input data set is already sorted, no sorting done.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS.
+NOTE: There were 4 observations read from the data set WORK.ARACEN_DENOMS.
+NOTE: The data set WORK.ARACEN_STATS2 has 12 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS2.
+NOTE: The data set WORK.ARACEN_STATS3 has 12 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS3.
+NOTE: The data set WORK.ARACEN_STATS3 has 12 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS3.
+NOTE: The data set WORK.ARACEN_STATS4 has 3 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      997:96   
+NOTE: Variable _3 is uninitialized.
+NOTE: There were 3 observations read from the data set WORK.ARACEN_STATS4.
+NOTE: The data set WORK.FINAL_STATS_ARACEN has 3 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 3 observations read from the data set WORK.FINAL_STATS_ARACEN.
+NOTE: The data set WORK.FINAL_STATS_ARACEN has 3 observations and 8 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+551  
+552  
+553  /*=========================================================
+554  Create macro to get ```````````desciptive statistics for numeric variables
+555  =========================================================*/
+556  
+557  /*----------------------------------------------------------
+558  Macro flow:<br/>
+559  Get descriptive statistics<br/>
+560  Process the statistics as per presentation needs<br/>
+561  Transpose the statistics such that they become rows<br/>
+562  Transpose the data such that treatments become columns<br/>
+563  ----------------------------------------------------------*/
+564  
+565  
+566  %macro descriptive(
+567        var=,
+568        label=,
+569        group=,
+570        n=,
+571        mean=,
+572        sd=,
+573        min=,
+574        median=,
+575        max=
+576        );
+577  *------------------------------------------------------------------------------;
+578  *Get descriptive statistics;
+579  *------------------------------------------------------------------------------;
+580  /*      %let var=age;*/
+581  /*      %let label=%str(Age (Years));*/
+582  /*      %let group=3;*/
+583  /*      %let n=3.;*/
+584  /*      %let mean=5.1;*/
+585  /*      %let sd=5.1;*/
+586  /*      %let min=3.;*/
+587  /*      %let median=5.1;*/
+588  /*       %let max=3.;*/
+589  /*    %put &max;*/
+590  
+591  proc summary data=adsl03  nway;     /*age summary stats*/
+592     class treatment;  /*by treatment*/
+593     where not missing(&var.);
+594     var &var.;
+595     output out=&var._stats(drop=_type_ _freq_)
+596     n= mean= std= min= median= max= /autoname;
+597  run;
+598  
+599  /*proc contents data= age_stats varnum; run;*/
+600  *------------------------------------------------------------------------------;
+601  *Process the statistics as per presentation needs;
+602  *------------------------------------------------------------------------------;
+603  
+604  data &var._stats2;
+605     set &var._stats;
+606     if not missing(&var._n) then n=put(&var._n,&n.);   /*set these stats format and type*/
+607     if not missing(&var._mean) then mean=put(&var._mean,&mean.);
+608     if not missing(&var._stddev) then sd=put(&var._stddev,&sd.);
+609     if not missing(&var._min) then min=put(&var._min,&min.);
+610     if not missing(&var._median) then median=put(&var._median,&median.);
+611     if not missing(&var._max) then max=put(&var._max,&max.);
+612  
+613     drop &var._:;
+614  run;
+615  
+616  *------------------------------------------------------------------------------;
+617  *Transpose the statistics such that they become rows;
+618  *------------------------------------------------------------------------------;
+619  
+620  proc transpose data=&var._stats2 out=&var._stats3(drop=_name_) label=statistic;
+621     by   treatment;
+622     var n mean sd min median max;
+623     label n="n"
+624           mean="Mean"
+625           sd="SD"
+626           min="Min"
+627           median="Median"
+628           max="Max";
+629  run;
+630  
+631  data &var._stats4;
+632     set &var._stats3;
+633     length label $50;
+634  
+635     label="&label.";
+636     group=&group.;
+637  
+638     select(statistic);
+639        when("n") intord=1;
+640        when ("Mean") intord=2;
+641        when ("SD") intord=3;
+642        when ("Min") intord=4;
+643        when ("Median") intord=5;
+644        when ("Max") intord=6;
+645     otherwise;
+646     end;
+647  run;
+648  
+649  *------------------------------------------------------------------------------;
+650  *Transpose the data such that treatments become columns;
+651  *------------------------------------------------------------------------------;
+652  
+653  proc sort data=&var._stats4;
+654     by  group intord label statistic;
+655  run;
+656  
+657  proc transpose data=&var._stats4 out=_final_stats_&var.;
+658     by  group intord label statistic;
+659     var col1;
+660     id treatment;
+661  run;
+662  
+663  data final_stats_&var.;
+664     set _final_stats_&var.;
+665     length c1-c6 $200;
+666     c1=label;
+667     c2=statistic;
+668     c3=_0;
+669     c4=_54;
+670     c5=_81;
+671     c6=_98;
+672     keep group  intord c1-c6 ;
+673  run;
+674  
+675  %mend;
+676  
+677  /*proc contents data=_final_stats_age varnum; run; */
+678  
+679  /*=========================================================
+680  Call the descriptive macro for age, height, weight and bmi
+681  =========================================================*/
+682  
+683  
+684  %descriptive(
+685        var=age,
+686        label=%str(Age (Years)),
+687        group=3,
+688        n=3.,
+689        mean=5.1,
+690        sd=5.1,
+691        min=3.,
+692        median=5.1,
+693        max=3.
+694        );
+
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(age);
+NOTE: The data set WORK.AGE_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.AGE_STATS.
+NOTE: The data set WORK.AGE_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.AGE_STATS2.
+NOTE: The data set WORK.AGE_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS3.
+NOTE: The data set WORK.AGE_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS4.
+NOTE: The data set WORK.AGE_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS4.
+NOTE: The data set WORK._FINAL_STATS_AGE has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_AGE.
+NOTE: The data set WORK.FINAL_STATS_AGE has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+695  
+696  
+697  %descriptive(
+698        var=weightbl,
+699        label=%str(Weight (Kg)),
+700        group=4,
+701        n=3.,
+702        mean=6.2,
+703        sd=6.2,
+704        min=5.1,
+705        median=6.2,
+706        max=5.1
+707        );
+
+NOTE: There were 506 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(weightbl);
+NOTE: The data set WORK.WEIGHTBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.WEIGHTBL_STATS.
+NOTE: The data set WORK.WEIGHTBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.WEIGHTBL_STATS2.
+NOTE: The data set WORK.WEIGHTBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS3.
+NOTE: The data set WORK.WEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS4.
+NOTE: The data set WORK.WEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_WEIGHTBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_WEIGHTBL.
+NOTE: The data set WORK.FINAL_STATS_WEIGHTBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+708  
+709  %descriptive(
+710        var=heightbl,
+711        label=%str(Height (cm)),
+712        group=5,
+713        n=3.,
+714        mean=5.1,
+715        sd=5.1,
+716        min=3.,
+717        median=5.1,
+718        max=3.
+719        );
+
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(heightbl);
+NOTE: The data set WORK.HEIGHTBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.HEIGHTBL_STATS.
+NOTE: The data set WORK.HEIGHTBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.HEIGHTBL_STATS2.
+NOTE: The data set WORK.HEIGHTBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS3.
+NOTE: The data set WORK.HEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS4.
+NOTE: The data set WORK.HEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_HEIGHTBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_HEIGHTBL.
+NOTE: The data set WORK.FINAL_STATS_HEIGHTBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+720  
+721  %descriptive(
+722        var=bmibl,
+723        label=%str(BMI (kg/m**2)),
+724        group=6,
+725        n=3.,
+726        mean=7.3,
+727        sd=7.3,
+728        min=6.2,
+729        median=7.3,
+730        max=6.2
+731        );
+
+NOTE: There were 506 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(bmibl);
+NOTE: The data set WORK.BMIBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.BMIBL_STATS.
+NOTE: The data set WORK.BMIBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.BMIBL_STATS2.
+NOTE: The data set WORK.BMIBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS3.
+NOTE: The data set WORK.BMIBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS4.
+NOTE: The data set WORK.BMIBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_BMIBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_BMIBL.
+NOTE: The data set WORK.FINAL_STATS_BMIBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+732  
+733  
+734  /*=========================================================
+735  ``````````Combine all datasets containing counts/percentages and descriptive statistics
+736  =========================================================*/
+737  
+738  
+739  data final;
+740     set final_stats_:;    /*merge all final datasets*/
+741     if group =6 then page=2;
+742     else page=1;
+743  run;
+
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_AGE.
+NOTE: There were 3 observations read from the data set WORK.FINAL_STATS_ARACEN.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_BMIBL.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_HEIGHTBL.
+NOTE: There were 2 observations read from the data set WORK.FINAL_STATS_SEXN.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_WEIGHTBL.
+NOTE: The data set WORK.FINAL has 29 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+744  
+745  proc sort data=final;
+746     by page group intord;
+747  run;
+
+NOTE: There were 29 observations read from the data set WORK.FINAL.
+NOTE: The data set WORK.FINAL has 29 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+748  /**********************************************************************
+749   Program:    dm_chracters.sas
+750   Purpose:    create a dm table
+751   Author:     Daniel
+752   Date:       2026-01-03
+753  **********************************************************************/
+754  
+755  
+756  
+757  /*=========================================================
+758  Programming for the Task
+759  =========================================================*/
+760  
+761  /*====================*/
+762  /* include _setup.sas and /*open log*/  */
+763  /*====================*/;
+764  %let
+764! SETUP_PATH=%str(C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulator
+764! y_Submission\Submission data files\_setup.sas);
+765  %include "&SETUP_PATH";
+NOTE: Libref PROJ was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: 
+      C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Su
+      bmission data files
+NOTE: Libref ADAM was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: 
+      C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Su
+      bmission data files\Data\ADaM
+NOTE: Libref OUTTFL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: 
+      C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Su
+      bmission data files\Outputs\Table
+      ============================================================
+      Project Setup
+      ============================================================
+NOTE: ROOT          = 
+C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submissi
+on data files
+NOTE: DIR_PROG      = 
+C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submissi
+on data files/Programs
+NOTE: DIR_ADAM      = 
+C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submissi
+on data files/Data/ADaM
+NOTE: DIR_TLFOUT    = 
+C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submissi
+on data files/Outputs/Table
+NOTE: DIR_LOG       = 
+C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submissi
+on data files/Logs
+NOTE: SYSUSERID     = hed2
+NOTE: SYSHOSTNAME   = hdw02234493
+NOTE: SYSVLONG      = 9.04.01M5P091317
+NOTE: SYSENCODING   = wlatin1
+NOTE: SYSSCP        = WIN
+NOTE: RUN_DATETIME  = 2026-01-07T09:18:50
+984   
+985   %let PGNAME=dm_chracters;
+986   /*%open_log(&PGNAME);*/
+987   
+988   /*=========================================================
+989   set Input and output
+990   =========================================================*/
+991   %let PROGDIR  = &ROOT.\Programs\production\table\;
+992   %let outputpath= &ROOT.\Outputs\table;
+993   
+994   
+995   
+996   /*=========================================================
+997   Read input datasets
+998   =========================================================*/
+999   
+1000  
+1001  data adsl01;
+1002     set adam.adsl;
+1003     where ITTFL="Y";     /*using itt*/
+1004  run;
+
+NOTE: There were 254 observations read from the data set ADAM.ADSL.
+      WHERE ITTFL='Y';
+NOTE: The data set WORK.ADSL01 has 254 observations and 48 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+
+1005  
+1006  /*=========================================================
+1007  Create a variable named 'treatment' to hold report level column groupings<br/>
+1008  Also create duplicate rows for presenting total column
+1009  =========================================================*/
+1010  
+1011  data adsl02;
+1012     set adsl01;
+1013  
+1014     treatment=trt01an;
+1015     output;
+1016     treatment=98;  /*3 is overall */
+1017     output;
+1018  run;
+
+NOTE: There were 254 observations read from the data set WORK.ADSL01.
+NOTE: The data set WORK.ADSL02 has 508 observations and 49 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+1019  
+1020  /*=========================================================
+1021  Create formats for preloading to create full template for sparse data
+1022  =========================================================*/
+1023  
+1024  /*----------------------------------------------------------
+1025  Notice the creation of numeric and character formats for categorical variables
+1026  ----------------------------------------------------------*/
+1027  
+1028  
+1029  proc format;
+1030  /*   value treatment*/
+1031  /*      1=1*/
+1032  /*      2=2*/
+1033  /*      3=3*/
+1034  /*4=4;*/
+1035  /* */
+1036  /*   value sexn*/
+1037  /*      99=99*/
+1038  /*      1=1*/
+1039  /*      2=2;*/
+1040  /* */
+1041  /*   value aracen*/
+1042  /*      99=99*/
+1043  /*      1=1*/
+1044  /*      2=2*/
+1045  /*      3=3*/
+1046  /*      4=4;*/
+1047  
+1048     value sexn_disp
+1049        99="Missing"
+1050        1="Male"
+1051        2="Female";
+NOTE: Format SEXN_DISP is already on the library WORK.FORMATS.
+NOTE: Format SEXN_DISP has been output.
+1052  
+1053     value aracen_disp
+1054        99="Missing"
+1055        1="White"
+1056        2="Black or African American"
+1057        3="Asian"
+1058        4="Other";
+NOTE: Format ARACEN_DISP is already on the library WORK.FORMATS.
+NOTE: Format ARACEN_DISP has been output.
+1059  
+1060       invalue $genderfmt     /*invalue for text */
+1061        "M" = 1
+1062        "F" = 2;
+NOTE: Informat $GENDERFMT is already on the library WORK.FORMATS.
+NOTE: Informat $GENDERFMT has been output.
+1063  
+1064           invalue $racefmt     /*invalue for text */
+1065        "WHITE" = 1
+1066        "BLACK OR AFRICAN AMERICAN" = 2
+1067  "AMERICAN INDIAN OR ALASKA NATIVE" = 3;
+NOTE: Informat $RACEFMT is already on the library WORK.FORMATS.
+NOTE: Informat $RACEFMT has been output.
+1068  run;
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1069  
+1070  
+1071  /*=========================================================
+1072  ```````Create numeric variables for categorical variables, also setting them to 0 for
+1072! missing values
+1073  =========================================================*/
+1074  
+1075  
+1076  data adsl03;
+1077     set adsl02;
+1078     keep usubjid treatment sexn  aracen age weightbl  heightbl  bmibl ;
+1079  sexn=input(input(sex, $genderfmt.),8.);
+1080  aracen=input(input(race,$racefmt.),8.);
+1081     if missing(sexn) then sexn=99;
+1082     if missing(aracen) then aracen=99;    /*if missing*/*/;
+1083  run;
+
+NOTE: There were 508 observations read from the data set WORK.ADSL02.
+NOTE: The data set WORK.ADSL03 has 508 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+1084  /* proc contents data=adsl03 varnum;run; */
+1085  /*proc freq data=adsl02 ;*/
+1086  /*table sex race;*/
+1087  /*run;  */
+1088  
+1089  /*=========================================================
+1090  Get treatment totals into a dataset and into macro variables(for column headers)
+1091  =========================================================*/
+1092  
+1093  /*----------------------------------------------------------
+1094  Get treatment `````````` totals based on actual data
+1095  ----------------------------------------------------------*/
+1096  proc sql;
+1097     create table trttotal_pre as
+1098        select treatment  ,
+1099        count(distinct usubjid)    as trttotal   /*calculate the n of three groups*/
+1100        from adsl02
+1101        group by treatment;
+NOTE: Table WORK.TRTTOTAL_PRE created, with 4 rows and 2 columns.
+
+1102  quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1103  
+1104  /*----------------------------------------------------------
+1105  Create dummy dataset for treatement totals
+1106  ----------------------------------------------------------*/
+1107  
+1108  data dummy_pre;
+1109     do treatment=0,54,81,98;
+1110        output;
+1111     end;
+1112  run;
+
+NOTE: The data set WORK.DUMMY_PRE has 4 observations and 1 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1113  
+1114  /*----------------------------------------------------------
+1115  Merge actual counts with dummt counts
+1116  ----------------------------------------------------------*/
+1117  
+1118  data trttotals;
+1119     merge dummy_pre(in=a)  trttotal_pre(in=b);
+1120     by treatment;
+1121     if trttotal=. then trttotal=0;
+1122  run;
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.TRTTOTAL_PRE.
+NOTE: The data set WORK.TRTTOTALS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+1123  
+1124  
+1125  /*----------------------------------------------------------
+1126  Create macro variables to present treatment totals in column headers of report
+1127  ----------------------------------------------------------*/
+1128  
+1129  proc sql noprint;
+1130     select count(distinct usubjid) into :n1 from adsl02 where treatment=0;
+1131     select count(distinct usubjid) into :n2 from adsl02 where treatment=54;
+1132     select count(distinct usubjid) into :n3 from adsl02 where treatment=81;
+1133     select count(distinct usubjid) into :n4 from adsl02 where treatment=98;
+1133!                                                                             /*create three
+1133! macro variables*/
+1134  quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+1135  
+1136  /*=========================================================
+1137  Create a macro for obtaining counts and percentages for ````````categorical variables
+1138  =========================================================*/
+1139  
+1140  /*----------------------------------------------------------
+1141  Macro flow: <br/>
+1142  Obtain non-missing values as denominator<br/>
+1143  Obtain level counts using proc summary using completetypes,preloadfmt and nway options<br/>
+1144  Merge level counts with denominator counts<br/>
+1145  Calculate percentages<br/>
+1146  Transpose the dataset to get treatments as columns<br/>
+1147  ----------------------------------------------------------*/
+1148  
+1149  
+1150  %macro count_percent(var=,
+1151                  label=,
+1152                  group=
+1153                 );
+1154  
+1155  *-------------------------------------------;
+1156  *obtain non-missing values as denominator;
+1157  *-------------------------------------------;
+1158  /* %let var=sexn;*/
+1159  /*           %let  label=%str(Sex);*/
+1160  /*            %let  group=1;*/
+1161  
+1162  proc sql;
+1163     create table &var._denoms as
+1164     select treatment,count(distinct usubjid) as denom
+1165     from adsl03
+1166     where &var not in (., 99)
+1167     group by treatment
+1168     order by treatment;
+1169  quit;
+1170  
+1171  data &var.denoms;
+1172     merge dummy_pre &var._denoms;
+1173     by treatment;
+1174     if denom =. then denom=0;
+1175  run;
+1176  
+1177  *-------------------------------------------;
+1178  *obtain level counts using proc summary using completetypes,preloadfmt and nway options;
+1179  *-------------------------------------------;
+1180  
+1181  proc summary data=adsl03 completetypes nway;
+1182     class treatment /preloadfmt;
+1183     class &var./preloadfmt;
+1184     where not missing(&var.);
+1185  /*   format  &var. &var.. treatment treatment.;*/
+1186     output out=&var._stats(drop=_type_ rename=(_freq_=count));
+1187  run;
+1188  
+1189  *---------------------------------------;
+1190  *merge level counts with denominator counts;
+1191  *---------------------------------------;
+1192  
+1193  *numerator counts;
+1194  
+1195  proc sort data=&var._stats;
+1196     by treatment ;
+1197  run;
+1198  
+1199  *denominator counts;
+1200  
+1201  proc sort data=&var._denoms;
+1202     by treatment ;
+1203  run;
+1204  
+1205  data &var._stats2;
+1206     merge &var._stats &var._denoms;
+1207     by treatment ;
+1208  run;
+1209  
+1210  *-----------------------------------------------;
+1211  *calculate percentages;
+1212  *-----------------------------------------------;
+1213  
+1214  data &var._stats3;
+1215     set &var._stats2;
+1216     length label statistic $50 cp $20;
+1217  
+1218     label="&label.";
+1219     group=&group.;
+1220  
+1221     intord=&var.;
+1222  
+1223     statistic=put(&var.,&var._disp.);    /*use sex or race format*/
+1224  
+1225  
+1226     if count ne 0 and intord ne 99 then cp=put(count,3.)|| '
+1226! ('||put(round(count*100/denom,0.1),5.1)||'%)';
+1227     else cp=put(count,3.);
+1228  
+1229  run;
+1230  
+1231  *-----------------------------------------------;
+1232  *Transpose the dataset to get treatments as columns;
+1233  *-----------------------------------------------;
+1234  
+1235  proc sort data=&var._stats3;
+1236     by  group intord label statistic;
+1237  run;
+1238  
+1239  proc transpose data=&var._stats3 out=&var._stats4;
+1240     by  group intord label statistic;
+1241     var cp;
+1242     id treatment;
+1243  run;
+1244  
+1245  /*proc contents data= sexn_stats4 varnum;*/
+1246  /*run; */
+1247  
+1248  data final_stats_&var.;
+1249     length c1-c6 $200;    /*three groups*/
+1250     set &var._stats4;
+1251     if intord=0 and compress(_3)="0" then delete;
+1252     c1=label;
+1253     c2=statistic;
+1254     c3=_0;
+1255     c4=_54;
+1256     c5=_81;
+1257     c6=_98;
+1258  
+1259     keep group  intord c1-c6 ;
+1260  run;
+1261  
+1262  proc sort data=final_stats_&var.;
+1263     by  group intord;
+1264  run;
+1265  %mend;
+1266  
+1267  
+1268  /*=========================================================
+1269  Call the macro to get counts and percentages for sex and race variables
+1270  =========================================================*/
+1271  /*----------------------------------------------------------
+1272  Notice the creation of group and order variables within macro
+1273  ----------------------------------------------------------*/
+1274  %count_percent(var=sexn,
+1275              label=%str(Sex),
+1276               group=1
+1277              );
+NOTE: Table WORK.SEXN_DENOMS created, with 4 rows and 2 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.SEXN_DENOMS.
+NOTE: The data set WORK.SEXNDENOMS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+WARNING: The format for variable TREATMENT cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+WARNING: The format for variable SEXN cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(sexn);
+NOTE: The data set WORK.SEXN_STATS has 8 observations and 3 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS.
+NOTE: The data set WORK.SEXN_STATS has 8 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Input data set is already sorted, no sorting done.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS.
+NOTE: There were 4 observations read from the data set WORK.SEXN_DENOMS.
+NOTE: The data set WORK.SEXN_STATS2 has 8 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS2.
+NOTE: The data set WORK.SEXN_STATS3 has 8 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS3.
+NOTE: The data set WORK.SEXN_STATS3 has 8 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS3.
+NOTE: The data set WORK.SEXN_STATS4 has 2 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      2384:96   
+NOTE: Variable _3 is uninitialized.
+NOTE: There were 2 observations read from the data set WORK.SEXN_STATS4.
+NOTE: The data set WORK.FINAL_STATS_SEXN has 2 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 2 observations read from the data set WORK.FINAL_STATS_SEXN.
+NOTE: The data set WORK.FINAL_STATS_SEXN has 2 observations and 8 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1278  
+1279  
+1280  %count_percent(var=aracen,
+1281              label=%str(Race),
+1282               group=2
+1283              );
+NOTE: Table WORK.ARACEN_DENOMS created, with 4 rows and 2 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.ARACEN_DENOMS.
+NOTE: The data set WORK.ARACENDENOMS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+WARNING: The format for variable TREATMENT cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+WARNING: The format for variable ARACEN cannot be preloaded. A finite set of formatted values 
+         cannot be produced from the format.  The format is not recognized, is a SAS format, 
+         calls a function, or contains a nested format in its definition. Preload will have no 
+         effect.
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(aracen);
+NOTE: The data set WORK.ARACEN_STATS has 12 observations and 3 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS.
+NOTE: The data set WORK.ARACEN_STATS has 12 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Input data set is already sorted, no sorting done.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS.
+NOTE: There were 4 observations read from the data set WORK.ARACEN_DENOMS.
+NOTE: The data set WORK.ARACEN_STATS2 has 12 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS2.
+NOTE: The data set WORK.ARACEN_STATS3 has 12 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS3.
+NOTE: The data set WORK.ARACEN_STATS3 has 12 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS3.
+NOTE: The data set WORK.ARACEN_STATS4 has 3 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      2446:96   
+NOTE: Variable _3 is uninitialized.
+NOTE: There were 3 observations read from the data set WORK.ARACEN_STATS4.
+NOTE: The data set WORK.FINAL_STATS_ARACEN has 3 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 3 observations read from the data set WORK.FINAL_STATS_ARACEN.
+NOTE: The data set WORK.FINAL_STATS_ARACEN has 3 observations and 8 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1284  
+1285  
+1286  /*=========================================================
+1287  Create macro to get ```````````desciptive statistics for numeric variables
+1288  =========================================================*/
+1289  
+1290  /*----------------------------------------------------------
+1291  Macro flow:<br/>
+1292  Get descriptive statistics<br/>
+1293  Process the statistics as per presentation needs<br/>
+1294  Transpose the statistics such that they become rows<br/>
+1295  Transpose the data such that treatments become columns<br/>
+1296  ----------------------------------------------------------*/
+1297  
+1298  
+1299  %macro descriptive(
+1300        var=,
+1301        label=,
+1302        group=,
+1303        n=,
+1304        mean=,
+1305        sd=,
+1306        min=,
+1307        median=,
+1308        max=
+1309        );
+1310  *------------------------------------------------------------------------------;
+1311  *Get descriptive statistics;
+1312  *------------------------------------------------------------------------------;
+1313  /*      %let var=age;*/
+1314  /*      %let label=%str(Age (Years));*/
+1315  /*      %let group=3;*/
+1316  /*      %let n=3.;*/
+1317  /*      %let mean=5.1;*/
+1318  /*      %let sd=5.1;*/
+1319  /*      %let min=3.;*/
+1320  /*      %let median=5.1;*/
+1321  /*       %let max=3.;*/
+1322  /*    %put &max;*/
+1323  
+1324  proc summary data=adsl03  nway;     /*age summary stats*/
+1325     class treatment;  /*by treatment*/
+1326     where not missing(&var.);
+1327     var &var.;
+1328     output out=&var._stats(drop=_type_ _freq_)
+1329     n= mean= std= min= median= max= /autoname;
+1330  run;
+1331  
+1332  /*proc contents data= age_stats varnum; run;*/
+1333  *------------------------------------------------------------------------------;
+1334  *Process the statistics as per presentation needs;
+1335  *------------------------------------------------------------------------------;
+1336  
+1337  data &var._stats2;
+1338     set &var._stats;
+1339     if not missing(&var._n) then n=put(&var._n,&n.);   /*set these stats format and type*/
+1340     if not missing(&var._mean) then mean=put(&var._mean,&mean.);
+1341     if not missing(&var._stddev) then sd=put(&var._stddev,&sd.);
+1342     if not missing(&var._min) then min=put(&var._min,&min.);
+1343     if not missing(&var._median) then median=put(&var._median,&median.);
+1344     if not missing(&var._max) then max=put(&var._max,&max.);
+1345  
+1346     drop &var._:;
+1347  run;
+1348  
+1349  *------------------------------------------------------------------------------;
+1350  *Transpose the statistics such that they become rows;
+1351  *------------------------------------------------------------------------------;
+1352  
+1353  proc transpose data=&var._stats2 out=&var._stats3(drop=_name_) label=statistic;
+1354     by   treatment;
+1355     var n mean sd min median max;
+1356     label n="n"
+1357           mean="Mean"
+1358           sd="SD"
+1359           min="Min"
+1360           median="Median"
+1361           max="Max";
+1362  run;
+1363  
+1364  data &var._stats4;
+1365     set &var._stats3;
+1366     length label $50;
+1367  
+1368     label="&label.";
+1369     group=&group.;
+1370  
+1371     select(statistic);
+1372        when("n") intord=1;
+1373        when ("Mean") intord=2;
+1374        when ("SD") intord=3;
+1375        when ("Min") intord=4;
+1376        when ("Median") intord=5;
+1377        when ("Max") intord=6;
+1378     otherwise;
+1379     end;
+1380  run;
+1381  
+1382  *------------------------------------------------------------------------------;
+1383  *Transpose the data such that treatments become columns;
+1384  *------------------------------------------------------------------------------;
+1385  
+1386  proc sort data=&var._stats4;
+1387     by  group intord label statistic;
+1388  run;
+1389  
+1390  proc transpose data=&var._stats4 out=_final_stats_&var.;
+1391     by  group intord label statistic;
+1392     var col1;
+1393     id treatment;
+1394  run;
+1395  
+1396  data final_stats_&var.;
+1397     set _final_stats_&var.;
+1398     length c1-c6 $200;
+1399     c1=label;
+1400     c2=statistic;
+1401     c3=_0;
+1402     c4=_54;
+1403     c5=_81;
+1404     c6=_98;
+1405     keep group  intord c1-c6 ;
+1406  run;
+1407  
+1408  %mend;
+1409  
+1410  /*proc contents data=_final_stats_age varnum; run; */
+1411  
+1412  /*=========================================================
+1413  Call the descriptive macro for age, height, weight and bmi
+1414  =========================================================*/
+1415  
+1416  
+1417  %descriptive(
+1418        var=age,
+1419        label=%str(Age (Years)),
+1420        group=3,
+1421        n=3.,
+1422        mean=5.1,
+1423        sd=5.1,
+1424        min=3.,
+1425        median=5.1,
+1426        max=3.
+1427        );
+
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(age);
+NOTE: The data set WORK.AGE_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.AGE_STATS.
+NOTE: The data set WORK.AGE_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.AGE_STATS2.
+NOTE: The data set WORK.AGE_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS3.
+NOTE: The data set WORK.AGE_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS4.
+NOTE: The data set WORK.AGE_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS4.
+NOTE: The data set WORK._FINAL_STATS_AGE has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_AGE.
+NOTE: The data set WORK.FINAL_STATS_AGE has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1428  
+1429  
+1430  %descriptive(
+1431        var=weightbl,
+1432        label=%str(Weight (Kg)),
+1433        group=4,
+1434        n=3.,
+1435        mean=6.2,
+1436        sd=6.2,
+1437        min=5.1,
+1438        median=6.2,
+1439        max=5.1
+1440        );
+
+NOTE: There were 506 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(weightbl);
+NOTE: The data set WORK.WEIGHTBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.WEIGHTBL_STATS.
+NOTE: The data set WORK.WEIGHTBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.WEIGHTBL_STATS2.
+NOTE: The data set WORK.WEIGHTBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS3.
+NOTE: The data set WORK.WEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS4.
+NOTE: The data set WORK.WEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_WEIGHTBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_WEIGHTBL.
+NOTE: The data set WORK.FINAL_STATS_WEIGHTBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1441  
+1442  %descriptive(
+1443        var=heightbl,
+1444        label=%str(Height (cm)),
+1445        group=5,
+1446        n=3.,
+1447        mean=5.1,
+1448        sd=5.1,
+1449        min=3.,
+1450        median=5.1,
+1451        max=3.
+1452        );
+
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(heightbl);
+NOTE: The data set WORK.HEIGHTBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.HEIGHTBL_STATS.
+NOTE: The data set WORK.HEIGHTBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.HEIGHTBL_STATS2.
+NOTE: The data set WORK.HEIGHTBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS3.
+NOTE: The data set WORK.HEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS4.
+NOTE: The data set WORK.HEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_HEIGHTBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_HEIGHTBL.
+NOTE: The data set WORK.FINAL_STATS_HEIGHTBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1453  
+1454  %descriptive(
+1455        var=bmibl,
+1456        label=%str(BMI (kg/m**2)),
+1457        group=6,
+1458        n=3.,
+1459        mean=7.3,
+1460        sd=7.3,
+1461        min=6.2,
+1462        median=7.3,
+1463        max=6.2
+1464        );
+
+NOTE: There were 506 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(bmibl);
+NOTE: The data set WORK.BMIBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.BMIBL_STATS.
+NOTE: The data set WORK.BMIBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.BMIBL_STATS2.
+NOTE: The data set WORK.BMIBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS3.
+NOTE: The data set WORK.BMIBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS4.
+NOTE: The data set WORK.BMIBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_BMIBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_BMIBL.
+NOTE: The data set WORK.FINAL_STATS_BMIBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+1465  
+1466  
+1467  /*=========================================================
+1468  ``````````Combine all datasets containing counts/percentages and descriptive statistics
+1469  =========================================================*/
+1470  
+1471  
+1472  data final;
+1473     set final_stats_:;    /*merge all final datasets*/
+1474     if group =6 then page=2;
+1475     else page=1;
+1476  run;
+
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_AGE.
+NOTE: There were 3 observations read from the data set WORK.FINAL_STATS_ARACEN.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_BMIBL.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_HEIGHTBL.
+NOTE: There were 2 observations read from the data set WORK.FINAL_STATS_SEXN.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_WEIGHTBL.
+NOTE: The data set WORK.FINAL has 29 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1477  
+1478  proc sort data=final;
+1479     by page group intord;
+1480  run;
+
+NOTE: There were 29 observations read from the data set WORK.FINAL.
+NOTE: The data set WORK.FINAL has 29 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1481  
+1482  /*proc contents data= final_stats_sexn varnum; run; */
+1483  /*proc contents data= final_stats_age varnum; run; */
+1484  
+1485  /*=========================================================
+1486  ```````````Report generation
+1487  =========================================================*/
+1488  %rtf_output_style_setup(
+1489    protocol=XXX01,
+1490    population=%str(Randomized Analysis Set),
+1491    pgm_path=%str(C:\XXX01\PROGRAMS\DRAFT\TFLs\ZZZ.sas)
+1492  );
+NOTE: Overwriting existing template/link: Styles.Csgpool01
+NOTE: STYLE 'Styles.Csgpool01' has been saved to: SASUSER.TEMPLAT
+NOTE: PROCEDURE TEMPLATE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1493  
+1494  title3 "Demographic Characteristics";
+1495  title4 "Intent-to-Treat";
+1496  
+1497  ods listing close;
+1498  options orientation=landscape nodate nonumber nobyline;
+1499  ods rtf file="&outputpath.\dm_macro_characteristics.rtf" style=csgpool01;
+NOTE: Writing RTF Body file: 
+      C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+      files\Outputs\table\dm_macro_characteristics.rtf
+1500  
+1501  
+1502  proc report data = final center headline headskip nowd split='~' missing style(report)=[just=center]
+1503     style(header)=[just=center];
+1504  
+1505     column page group c1 intord c2 c3 c4 c5 c6 ;
+1506  
+1507     define group/order noprint;
+1508     define intord /order noprint;
+1509     define page/order noprint;
+1510  
+1511     define c1/width=30 "Parameter" order style(column)=[cellwidth=1.5in protectspecialchars=off] style(header)=[just=left];
+1512     define c2/width=30 "Category/~Statistic" style(column)=[cellwidth=2in protectspecialchars=off]
+1512! style(header)=[just=left];
+1513  
+1514     define c3/"Placebo" "(N=%cmpres(&n1))"  style(column)=[cellwidth=1.7in just=center] ;
+1515     define c4/"Low dose" "(N=%cmpres(&n2))"  style(column)=[cellwidth=1.7in just=center]   ;
+1516     define c5/"High dose" "(N=%cmpres(&n3))"  style(column)=[cellwidth=1.7in just=center]   ;
+1517      define c6/"Total" "(N=%cmpres(&n4))"   style(column)=[cellwidth=1.7in just=center]   ;
+1518  
+1519     compute after group;
+1520        line @1 "";
+1521     endcomp;
+1522  
+1523     break after page/page;
+1524  run;
+
+NOTE: PROCEDURE REPORT used (Total process time):
+      real time           0.07 seconds
+      cpu time            0.01 seconds
+      
+NOTE: There were 29 observations read from the data set WORK.FINAL.
+
+1525  
+1526  
+1527  ods rtf close;
+1528  
+1529  /*dm 'log' clear;*/
+1530  /*dm 'output' clear;*/
+1531  /*ods results clear;*/
+1532  /*proc datasets lib=work kill nolist;*/
+1533  /*quit;*/
+1534  /*libname mylib clear;*/
+
+1535  /**********************************************************************
+1536   Program:    dm_chracters.sas
+1537   Purpose:    create a dm table
+1538   Author:     Daniel
+1539   Date:       2026-01-03
+1540  **********************************************************************/
+1541  
+1542  
+1543  
+1544  /*=========================================================
+1545  Programming for the Task
+1546  =========================================================*/
+1547  
+1548  /*====================*/
+1549  /* include _setup.sas and /*open log*/  */
+1550  /*====================*/;
+1551  %let SETUP_PATH=%str(C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission
+1551! data files\_setup.sas);
+1552  %include "&SETUP_PATH";
+NOTE: Libref PROJ was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission data 
+      files
+NOTE: Libref ADAM was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission data 
+      files\Data\ADaM
+NOTE: Libref OUTTFL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission data 
+      files\Outputs\Table
+      ============================================================
+      Project Setup
+      ============================================================
+NOTE: ROOT          = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files
+NOTE: DIR_PROG      = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Programs
+NOTE: DIR_ADAM      = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Data/ADaM
+NOTE: DIR_TLFOUT    = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Outputs/Table
+NOTE: DIR_LOG       = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Logs
+NOTE: SYSUSERID     = hed2
+NOTE: SYSHOSTNAME   = hdw02234493
+NOTE: SYSVLONG      = 9.04.01M5P091317
+NOTE: SYSENCODING   = wlatin1
+NOTE: SYSSCP        = WIN
+NOTE: RUN_DATETIME  = 2026-01-07T09:19:59
+1771  
+1772  %let PGNAME=dm_chracters;
+1773  /*%open_log(&PGNAME);*/
+1774  
+1775  /*=========================================================
+1776  set Input and output
+1777  =========================================================*/
+1778  %let PROGDIR  = &ROOT.\Programs\production\table\;
+1779  %let outputpath= &ROOT.\Outputs\table;
+1780  
+1781  
+1782  
+1783  /*=========================================================
+1784  Read input datasets
+1785  =========================================================*/
+1786  
+1787  
+1788  data adsl01;
+1789     set adam.adsl;
+1790     where ITTFL="Y";     /*using itt*/
+1791  run;
+
+NOTE: There were 254 observations read from the data set ADAM.ADSL.
+      WHERE ITTFL='Y';
+NOTE: The data set WORK.ADSL01 has 254 observations and 48 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1792  
+1793  /*=========================================================
+1794  Create a variable named 'treatment' to hold report level column groupings<br/>
+1795  Also create duplicate rows for presenting total column
+1796  =========================================================*/
+1797  
+1798  data adsl02;
+1799     set adsl01;
+1800  
+1801     treatment=trt01an;
+1802     output;
+1803     treatment=98;  /*3 is overall */
+1804     output;
+1805  run;
+
+NOTE: There were 254 observations read from the data set WORK.ADSL01.
+NOTE: The data set WORK.ADSL02 has 508 observations and 49 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1806  
+1807  /*=========================================================
+1808  Create formats for preloading to create full template for sparse data
+1809  =========================================================*/
+1810  
+1811  /*----------------------------------------------------------
+1812  Notice the creation of numeric and character formats for categorical variables
+1813  ----------------------------------------------------------*/
+1814  
+1815  
+1816  proc format;
+1817  /*   value treatment*/
+1818  /*      1=1*/
+1819  /*      2=2*/
+1820  /*      3=3*/
+1821  /*4=4;*/
+1822  /* */
+1823  /*   value sexn*/
+1824  /*      99=99*/
+1825  /*      1=1*/
+1826  /*      2=2;*/
+1827  /* */
+1828  /*   value aracen*/
+1829  /*      99=99*/
+1830  /*      1=1*/
+1831  /*      2=2*/
+1832  /*      3=3*/
+1833  /*      4=4;*/
+1834  
+1835     value sexn_disp
+1836        99="Missing"
+1837        1="Male"
+1838        2="Female";
+NOTE: Format SEXN_DISP is already on the library WORK.FORMATS.
+NOTE: Format SEXN_DISP has been output.
+1839  
+1840     value aracen_disp
+1841        99="Missing"
+1842        1="White"
+1843        2="Black or African American"
+1844        3="Asian"
+1845        4="Other";
+NOTE: Format ARACEN_DISP is already on the library WORK.FORMATS.
+NOTE: Format ARACEN_DISP has been output.
+1846  
+1847       invalue $genderfmt     /*invalue for text */
+1848        "M" = 1
+1849        "F" = 2;
+NOTE: Informat $GENDERFMT is already on the library WORK.FORMATS.
+NOTE: Informat $GENDERFMT has been output.
+1850  
+1851           invalue $racefmt     /*invalue for text */
+1852        "WHITE" = 1
+1853        "BLACK OR AFRICAN AMERICAN" = 2
+1854  "AMERICAN INDIAN OR ALASKA NATIVE" = 3;
+NOTE: Informat $RACEFMT is already on the library WORK.FORMATS.
+NOTE: Informat $RACEFMT has been output.
+1855  run;
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1856  
+1857  
+1858  /*=========================================================
+1859  ```````Create numeric variables for categorical variables, also setting them to 0 for missing values
+1860  =========================================================*/
+1861  
+1862  
+1863  data adsl03;
+1864     set adsl02;
+1865     keep usubjid treatment sexn  aracen age weightbl  heightbl  bmibl ;
+1866  sexn=input(input(sex, $genderfmt.),8.);
+1867  aracen=input(input(race,$racefmt.),8.);
+1868     if missing(sexn) then sexn=99;
+1869     if missing(aracen) then aracen=99;    /*if missing*/*/;
+1870  run;
+
+NOTE: There were 508 observations read from the data set WORK.ADSL02.
+NOTE: The data set WORK.ADSL03 has 508 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+1871  /* proc contents data=adsl03 varnum;run; */
+1872  /*proc freq data=adsl02 ;*/
+1873  /*table sex race;*/
+1874  /*run;  */
+1875  
+1876  /*=========================================================
+1877  Get treatment totals into a dataset and into macro variables(for column headers)
+1878  =========================================================*/
+1879  
+1880  /*----------------------------------------------------------
+1881  Get treatment `````````` totals based on actual data
+1882  ----------------------------------------------------------*/
+1883  proc sql;
+1884     create table trttotal_pre as
+1885        select treatment  ,
+1886        count(distinct usubjid)    as trttotal   /*calculate the n of three groups*/
+1887        from adsl02
+1888        group by treatment;
+NOTE: Table WORK.TRTTOTAL_PRE created, with 4 rows and 2 columns.
+
+1889  quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+1890  
+1891  /*----------------------------------------------------------
+1892  Create dummy dataset for treatement totals
+1893  ----------------------------------------------------------*/
+1894  
+1895  data dummy_pre;
+1896     do treatment=0,54,81,98;
+1897        output;
+1898     end;
+1899  run;
+
+NOTE: The data set WORK.DUMMY_PRE has 4 observations and 1 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1900  
+1901  /*----------------------------------------------------------
+1902  Merge actual counts with dummt counts
+1903  ----------------------------------------------------------*/
+1904  
+1905  data trttotals;
+1906     merge dummy_pre(in=a)  trttotal_pre(in=b);
+1907     by treatment;
+1908     if trttotal=. then trttotal=0;
+1909  run;
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.TRTTOTAL_PRE.
+NOTE: The data set WORK.TRTTOTALS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1910  
+1911  
+1912  /*----------------------------------------------------------
+1913  Create macro variables to present treatment totals in column headers of report
+1914  ----------------------------------------------------------*/
+1915  
+1916  proc sql noprint;
+1917     select count(distinct usubjid) into :n1 from adsl02 where treatment=0;
+1918     select count(distinct usubjid) into :n2 from adsl02 where treatment=54;
+1919     select count(distinct usubjid) into :n3 from adsl02 where treatment=81;
+1920     select count(distinct usubjid) into :n4 from adsl02 where treatment=98;
+1920!                                                                             /*create three macro variables*/
+1921  quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+1922  
+1923  /*=========================================================
+1924  Create a macro for obtaining counts and percentages for ````````categorical variables
+1925  =========================================================*/
+1926  
+1927  /*----------------------------------------------------------
+1928  Macro flow: <br/>
+1929  Obtain non-missing values as denominator<br/>
+1930  Obtain level counts using proc summary using completetypes,preloadfmt and nway options<br/>
+1931  Merge level counts with denominator counts<br/>
+1932  Calculate percentages<br/>
+1933  Transpose the dataset to get treatments as columns<br/>
+1934  ----------------------------------------------------------*/
+1935  
+1936  
+1937  %macro count_percent(var=,
+1938                  label=,
+1939                  group=
+1940                 );
+1941  
+1942  *-------------------------------------------;
+1943  *obtain non-missing values as denominator;
+1944  *-------------------------------------------;
+1945  /* %let var=sexn;*/
+1946  /*           %let  label=%str(Sex);*/
+1947  /*            %let  group=1;*/
+1948  
+1949  proc sql;
+1950     create table &var._denoms as
+1951     select treatment,count(distinct usubjid) as denom
+1952     from adsl03
+1953     where &var not in (., 99)
+1954     group by treatment
+1955     order by treatment;
+1956  quit;
+1957  
+1958  data &var.denoms;
+1959     merge dummy_pre &var._denoms;
+1960     by treatment;
+1961     if denom =. then denom=0;
+1962  run;
+1963  
+1964  *-------------------------------------------;
+1965  *obtain level counts using proc summary using completetypes,preloadfmt and nway options;
+1966  *-------------------------------------------;
+1967  
+1968  proc summary data=adsl03 completetypes nway;
+1969     class treatment /preloadfmt;
+1970     class &var./preloadfmt;
+1971     where not missing(&var.);
+1972  /*   format  &var. &var.. treatment treatment.;*/
+1973     output out=&var._stats(drop=_type_ rename=(_freq_=count));
+1974  run;
+1975  
+1976  *---------------------------------------;
+1977  *merge level counts with denominator counts;
+1978  *---------------------------------------;
+1979  
+1980  *numerator counts;
+1981  
+1982  proc sort data=&var._stats;
+1983     by treatment ;
+1984  run;
+1985  
+1986  *denominator counts;
+1987  
+1988  proc sort data=&var._denoms;
+1989     by treatment ;
+1990  run;
+1991  
+1992  data &var._stats2;
+1993     merge &var._stats &var._denoms;
+1994     by treatment ;
+1995  run;
+1996  
+1997  *-----------------------------------------------;
+1998  *calculate percentages;
+1999  *-----------------------------------------------;
+2000  
+2001  data &var._stats3;
+2002     set &var._stats2;
+2003     length label statistic $50 cp $20;
+2004  
+2005     label="&label.";
+2006     group=&group.;
+2007  
+2008     intord=&var.;
+2009  
+2010     statistic=put(&var.,&var._disp.);    /*use sex or race format*/
+2011  
+2012  
+2013     if count ne 0 and intord ne 99 then cp=put(count,3.)|| ' ('||put(round(count*100/denom,0.1),5.1)||'%)';
+2014     else cp=put(count,3.);
+2015  
+2016  run;
+2017  
+2018  *-----------------------------------------------;
+2019  *Transpose the dataset to get treatments as columns;
+2020  *-----------------------------------------------;
+2021  
+2022  proc sort data=&var._stats3;
+2023     by  group intord label statistic;
+2024  run;
+2025  
+2026  proc transpose data=&var._stats3 out=&var._stats4;
+2027     by  group intord label statistic;
+2028     var cp;
+2029     id treatment;
+2030  run;
+2031  
+2032  /*proc contents data= sexn_stats4 varnum;*/
+2033  /*run; */
+2034  
+2035  data final_stats_&var.;
+2036     length c1-c6 $200;    /*three groups*/
+2037     set &var._stats4;
+2038     if intord=0 and compress(_3)="0" then delete;
+2039     c1=label;
+2040     c2=statistic;
+2041     c3=_0;
+2042     c4=_54;
+2043     c5=_81;
+2044     c6=_98;
+2045  
+2046     keep group  intord c1-c6 ;
+2047  run;
+2048  
+2049  proc sort data=final_stats_&var.;
+2050     by  group intord;
+2051  run;
+2052  %mend;
+2053  
+2054  
+2055  /*=========================================================
+2056  Call the macro to get counts and percentages for sex and race variables
+2057  =========================================================*/
+2058  /*----------------------------------------------------------
+2059  Notice the creation of group and order variables within macro
+2060  ----------------------------------------------------------*/
+2061  %count_percent(var=sexn,
+2062              label=%str(Sex),
+2063               group=1
+2064              );
+NOTE: Table WORK.SEXN_DENOMS created, with 4 rows and 2 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.SEXN_DENOMS.
+NOTE: The data set WORK.SEXNDENOMS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+WARNING: The format for variable TREATMENT cannot be preloaded. A finite set of formatted values cannot be produced from the 
+         format.  The format is not recognized, is a SAS format, calls a function, or contains a nested format in its 
+         definition. Preload will have no effect.
+WARNING: The format for variable SEXN cannot be preloaded. A finite set of formatted values cannot be produced from the format. 
+          The format is not recognized, is a SAS format, calls a function, or contains a nested format in its definition. 
+         Preload will have no effect.
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(sexn);
+NOTE: The data set WORK.SEXN_STATS has 8 observations and 3 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS.
+NOTE: The data set WORK.SEXN_STATS has 8 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Input data set is already sorted, no sorting done.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS.
+NOTE: There were 4 observations read from the data set WORK.SEXN_DENOMS.
+NOTE: The data set WORK.SEXN_STATS2 has 8 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS2.
+NOTE: The data set WORK.SEXN_STATS3 has 8 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS3.
+NOTE: The data set WORK.SEXN_STATS3 has 8 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 8 observations read from the data set WORK.SEXN_STATS3.
+NOTE: The data set WORK.SEXN_STATS4 has 2 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: (Line):(Column).
+      4554:96   
+NOTE: Variable _3 is uninitialized.
+NOTE: There were 2 observations read from the data set WORK.SEXN_STATS4.
+NOTE: The data set WORK.FINAL_STATS_SEXN has 2 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 2 observations read from the data set WORK.FINAL_STATS_SEXN.
+NOTE: The data set WORK.FINAL_STATS_SEXN has 2 observations and 8 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+2065  
+2066  
+2067  %count_percent(var=aracen,
+2068              label=%str(Race),
+2069               group=2
+2070              );
+NOTE: Table WORK.ARACEN_DENOMS created, with 4 rows and 2 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.DUMMY_PRE.
+NOTE: There were 4 observations read from the data set WORK.ARACEN_DENOMS.
+NOTE: The data set WORK.ARACENDENOMS has 4 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+WARNING: The format for variable TREATMENT cannot be preloaded. A finite set of formatted values cannot be produced from the 
+         format.  The format is not recognized, is a SAS format, calls a function, or contains a nested format in its 
+         definition. Preload will have no effect.
+WARNING: The format for variable ARACEN cannot be preloaded. A finite set of formatted values cannot be produced from the 
+         format.  The format is not recognized, is a SAS format, calls a function, or contains a nested format in its 
+         definition. Preload will have no effect.
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(aracen);
+NOTE: The data set WORK.ARACEN_STATS has 12 observations and 3 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS.
+NOTE: The data set WORK.ARACEN_STATS has 12 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Input data set is already sorted, no sorting done.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS.
+NOTE: There were 4 observations read from the data set WORK.ARACEN_DENOMS.
+NOTE: The data set WORK.ARACEN_STATS2 has 12 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS2.
+NOTE: The data set WORK.ARACEN_STATS3 has 12 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS3.
+NOTE: The data set WORK.ARACEN_STATS3 has 12 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 12 observations read from the data set WORK.ARACEN_STATS3.
+NOTE: The data set WORK.ARACEN_STATS4 has 3 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: (Line):(Column).
+      4616:96   
+NOTE: Variable _3 is uninitialized.
+NOTE: There were 3 observations read from the data set WORK.ARACEN_STATS4.
+NOTE: The data set WORK.FINAL_STATS_ARACEN has 3 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 3 observations read from the data set WORK.FINAL_STATS_ARACEN.
+NOTE: The data set WORK.FINAL_STATS_ARACEN has 3 observations and 8 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+2071  
+2072  
+2073  /*=========================================================
+2074  Create macro to get ```````````desciptive statistics for numeric variables
+2075  =========================================================*/
+2076  
+2077  /*----------------------------------------------------------
+2078  Macro flow:<br/>
+2079  Get descriptive statistics<br/>
+2080  Process the statistics as per presentation needs<br/>
+2081  Transpose the statistics such that they become rows<br/>
+2082  Transpose the data such that treatments become columns<br/>
+2083  ----------------------------------------------------------*/
+2084  
+2085  
+2086  %macro descriptive(
+2087        var=,
+2088        label=,
+2089        group=,
+2090        n=,
+2091        mean=,
+2092        sd=,
+2093        min=,
+2094        median=,
+2095        max=
+2096        );
+2097  *------------------------------------------------------------------------------;
+2098  *Get descriptive statistics;
+2099  *------------------------------------------------------------------------------;
+2100  /*      %let var=age;*/
+2101  /*      %let label=%str(Age (Years));*/
+2102  /*      %let group=3;*/
+2103  /*      %let n=3.;*/
+2104  /*      %let mean=5.1;*/
+2105  /*      %let sd=5.1;*/
+2106  /*      %let min=3.;*/
+2107  /*      %let median=5.1;*/
+2108  /*       %let max=3.;*/
+2109  /*    %put &max;*/
+2110  
+2111  proc summary data=adsl03  nway;     /*age summary stats*/
+2112     class treatment;  /*by treatment*/
+2113     where not missing(&var.);
+2114     var &var.;
+2115     output out=&var._stats(drop=_type_ _freq_)
+2116     n= mean= std= min= median= max= /autoname;
+2117  run;
+2118  
+2119  /*proc contents data= age_stats varnum; run;*/
+2120  *------------------------------------------------------------------------------;
+2121  *Process the statistics as per presentation needs;
+2122  *------------------------------------------------------------------------------;
+2123  
+2124  data &var._stats2;
+2125     set &var._stats;
+2126     if not missing(&var._n) then n=put(&var._n,&n.);   /*set these stats format and type*/
+2127     if not missing(&var._mean) then mean=put(&var._mean,&mean.);
+2128     if not missing(&var._stddev) then sd=put(&var._stddev,&sd.);
+2129     if not missing(&var._min) then min=put(&var._min,&min.);
+2130     if not missing(&var._median) then median=put(&var._median,&median.);
+2131     if not missing(&var._max) then max=put(&var._max,&max.);
+2132  
+2133     drop &var._:;
+2134  run;
+2135  
+2136  *------------------------------------------------------------------------------;
+2137  *Transpose the statistics such that they become rows;
+2138  *------------------------------------------------------------------------------;
+2139  
+2140  proc transpose data=&var._stats2 out=&var._stats3(drop=_name_) label=statistic;
+2141     by   treatment;
+2142     var n mean sd min median max;
+2143     label n="n"
+2144           mean="Mean"
+2145           sd="SD"
+2146           min="Min"
+2147           median="Median"
+2148           max="Max";
+2149  run;
+2150  
+2151  data &var._stats4;
+2152     set &var._stats3;
+2153     length label $50;
+2154  
+2155     label="&label.";
+2156     group=&group.;
+2157  
+2158     select(statistic);
+2159        when("n") intord=1;
+2160        when ("Mean") intord=2;
+2161        when ("SD") intord=3;
+2162        when ("Min") intord=4;
+2163        when ("Median") intord=5;
+2164        when ("Max") intord=6;
+2165     otherwise;
+2166     end;
+2167  run;
+2168  
+2169  *------------------------------------------------------------------------------;
+2170  *Transpose the data such that treatments become columns;
+2171  *------------------------------------------------------------------------------;
+2172  
+2173  proc sort data=&var._stats4;
+2174     by  group intord label statistic;
+2175  run;
+2176  
+2177  proc transpose data=&var._stats4 out=_final_stats_&var.;
+2178     by  group intord label statistic;
+2179     var col1;
+2180     id treatment;
+2181  run;
+2182  
+2183  data final_stats_&var.;
+2184     set _final_stats_&var.;
+2185     length c1-c6 $200;
+2186     c1=label;
+2187     c2=statistic;
+2188     c3=_0;
+2189     c4=_54;
+2190     c5=_81;
+2191     c6=_98;
+2192     keep group  intord c1-c6 ;
+2193  run;
+2194  
+2195  %mend;
+2196  
+2197  /*proc contents data=_final_stats_age varnum; run; */
+2198  
+2199  /*=========================================================
+2200  Call the descriptive macro for age, height, weight and bmi
+2201  =========================================================*/
+2202  
+2203  
+2204  %descriptive(
+2205        var=age,
+2206        label=%str(Age (Years)),
+2207        group=3,
+2208        n=3.,
+2209        mean=5.1,
+2210        sd=5.1,
+2211        min=3.,
+2212        median=5.1,
+2213        max=3.
+2214        );
+
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(age);
+NOTE: The data set WORK.AGE_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.AGE_STATS.
+NOTE: The data set WORK.AGE_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.AGE_STATS2.
+NOTE: The data set WORK.AGE_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS3.
+NOTE: The data set WORK.AGE_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS4.
+NOTE: The data set WORK.AGE_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.AGE_STATS4.
+NOTE: The data set WORK._FINAL_STATS_AGE has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_AGE.
+NOTE: The data set WORK.FINAL_STATS_AGE has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+2215  
+2216  
+2217  %descriptive(
+2218        var=weightbl,
+2219        label=%str(Weight (Kg)),
+2220        group=4,
+2221        n=3.,
+2222        mean=6.2,
+2223        sd=6.2,
+2224        min=5.1,
+2225        median=6.2,
+2226        max=5.1
+2227        );
+
+NOTE: There were 506 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(weightbl);
+NOTE: The data set WORK.WEIGHTBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.WEIGHTBL_STATS.
+NOTE: The data set WORK.WEIGHTBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.WEIGHTBL_STATS2.
+NOTE: The data set WORK.WEIGHTBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS3.
+NOTE: The data set WORK.WEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS4.
+NOTE: The data set WORK.WEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.WEIGHTBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_WEIGHTBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_WEIGHTBL.
+NOTE: The data set WORK.FINAL_STATS_WEIGHTBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+2228  
+2229  %descriptive(
+2230        var=heightbl,
+2231        label=%str(Height (cm)),
+2232        group=5,
+2233        n=3.,
+2234        mean=5.1,
+2235        sd=5.1,
+2236        min=3.,
+2237        median=5.1,
+2238        max=3.
+2239        );
+
+NOTE: There were 508 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(heightbl);
+NOTE: The data set WORK.HEIGHTBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.HEIGHTBL_STATS.
+NOTE: The data set WORK.HEIGHTBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.HEIGHTBL_STATS2.
+NOTE: The data set WORK.HEIGHTBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS3.
+NOTE: The data set WORK.HEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS4.
+NOTE: The data set WORK.HEIGHTBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.HEIGHTBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_HEIGHTBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_HEIGHTBL.
+NOTE: The data set WORK.FINAL_STATS_HEIGHTBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+2240  
+2241  %descriptive(
+2242        var=bmibl,
+2243        label=%str(BMI (kg/m**2)),
+2244        group=6,
+2245        n=3.,
+2246        mean=7.3,
+2247        sd=7.3,
+2248        min=6.2,
+2249        median=7.3,
+2250        max=6.2
+2251        );
+
+NOTE: There were 506 observations read from the data set WORK.ADSL03.
+      WHERE not MISSING(bmibl);
+NOTE: The data set WORK.BMIBL_STATS has 4 observations and 7 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.BMIBL_STATS.
+NOTE: The data set WORK.BMIBL_STATS2 has 4 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 4 observations read from the data set WORK.BMIBL_STATS2.
+NOTE: The data set WORK.BMIBL_STATS3 has 24 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS3.
+NOTE: The data set WORK.BMIBL_STATS4 has 24 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS4.
+NOTE: The data set WORK.BMIBL_STATS4 has 24 observations and 6 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 24 observations read from the data set WORK.BMIBL_STATS4.
+NOTE: The data set WORK._FINAL_STATS_BMIBL has 6 observations and 9 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6 observations read from the data set WORK._FINAL_STATS_BMIBL.
+NOTE: The data set WORK.FINAL_STATS_BMIBL has 6 observations and 8 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+2252  
+2253  
+2254  /*=========================================================
+2255  ``````````Combine all datasets containing counts/percentages and descriptive statistics
+2256  =========================================================*/
+2257  
+2258  
+2259  data final;
+2260     set final_stats_:;    /*merge all final datasets*/
+2261     if group =6 then page=2;
+2262     else page=1;
+2263  run;
+
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_AGE.
+NOTE: There were 3 observations read from the data set WORK.FINAL_STATS_ARACEN.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_BMIBL.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_HEIGHTBL.
+NOTE: There were 2 observations read from the data set WORK.FINAL_STATS_SEXN.
+NOTE: There were 6 observations read from the data set WORK.FINAL_STATS_WEIGHTBL.
+NOTE: The data set WORK.FINAL has 29 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+2264  
+2265  proc sort data=final;
+2266     by page group intord;
+2267  run;
+
+NOTE: There were 29 observations read from the data set WORK.FINAL.
+NOTE: The data set WORK.FINAL has 29 observations and 9 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+
+2268  
+2269  /*proc contents data= final_stats_sexn varnum; run; */
+2270  /*proc contents data= final_stats_age varnum; run; */
+2271  
+2272  /*=========================================================
+2273  ```````````Report generation
+2274  =========================================================*/
+2275  %rtf_output_style_setup(
+2276    protocol=XXX01,
+2277    population=%str(Randomized Analysis Set),
+2278    pgm_path=%str(C:\XXX01\PROGRAMS\DRAFT\TFLs\ZZZ.sas)
+2279  );
+NOTE: Overwriting existing template/link: Styles.Csgpool01
+NOTE: STYLE 'Styles.Csgpool01' has been saved to: SASUSER.TEMPLAT
+NOTE: PROCEDURE TEMPLATE used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+2280  
+2281  title3 "^S={foreground=blue fontweight=bold fontstyle=italic}Demographic Characteristics";
+2282  title4 "^S={foreground=blue fontweight=bold fontstyle=italic}Intent-to-Treat";
+2283  
+2284  ods listing close;
+2285  options orientation=landscape nodate nonumber nobyline;
+2286  ods rtf file="&outputpath.\dm_macro_characteristics.rtf" style=csgpool01;
+NOTE: Writing RTF Body file: 
+      C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+      files\Outputs\table\dm_macro_characteristics.rtf
+2287  
+2288  
+2289  proc report data = final center headline headskip nowd split='~' missing style(report)=[just=center]
+2290     style(header)=[just=center];
+2291  
+2292     column page group c1 intord c2 c3 c4 c5 c6 ;
+2293  
+2294     define group/order noprint;
+2295     define intord /order noprint;
+2296     define page/order noprint;
+2297  
+2298     define c1/width=30 "Parameter" order style(column)=[cellwidth=1.5in protectspecialchars=off] style(header)=[just=left];
+2299     define c2/width=30 "Category/~Statistic" style(column)=[cellwidth=2in protectspecialchars=off]
+2299! style(header)=[just=left];
+2300  
+2301     define c3/"Placebo" "(N=%cmpres(&n1))"  style(column)=[cellwidth=1.7in just=center] ;
+2302     define c4/"Low dose" "(N=%cmpres(&n2))"  style(column)=[cellwidth=1.7in just=center]   ;
+2303     define c5/"High dose" "(N=%cmpres(&n3))"  style(column)=[cellwidth=1.7in just=center]   ;
+2304      define c6/"Total" "(N=%cmpres(&n4))"   style(column)=[cellwidth=1.7in just=center]   ;
+2305  
+2306     compute after group;
+2307        line @1 "";
+2308     endcomp;
+2309  
+2310     break after page/page;
+2311  run;
+
+NOTE: PROCEDURE REPORT used (Total process time):
+      real time           0.04 seconds
+      cpu time            0.00 seconds
+      
+NOTE: There were 29 observations read from the data set WORK.FINAL.
+
+2312  
+2313  
+2314  ods rtf close;
+2315  
+2316  /*dm 'log' clear;*/
+2317  /*dm 'output' clear;*/
+2318  /*ods results clear;*/
+2319  /*proc datasets lib=work kill nolist;*/
+2320  /*quit;*/
+2321  /*libname mylib clear;*/
+
+2322  /**********************************************************************
+2323   Program:    ds_analysis_population.sas
+2324   Purpose:    Prepare the analysis dataset ? Generate the overall results (two-row method) ? Calculate the denominator N
+2324! for the column headers ? Calculate the counts for the table body ? Fill in zeros ? Combine n(%) ? Transpose ? Output RTF
+2324! using PROC REPORT.
+2325   Author:     Daniel
+2326   Date:       2026-01-03
+2327   Note:
+2328                  1 ai read interpret
+2329                  2 ai write
+2330                  3 i edit
+2331  /***************************************************/
+2332  /*Version Control                                  */
+2333  /*Version     Name          Date       Abstract    */
+2334  /* [1.0]     Daniel     2026-01-03  Initial Version*/
+2335  /*                                                 */
+2336  /***************************************************/
+2337  
+2338  
+2339  
+2340  
+2341  /*=========================================================
+2342  Programming for the Task
+2343  =========================================================*/
+2344  
+2345  /*====================*/
+2346  /* include _setup.sas and /*open log*/  */
+2347  /*====================*/;
+2348  %let SETUP_PATH=%str(C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission
+2348! data files\_setup.sas);
+2349  %include "&SETUP_PATH";
+NOTE: Libref PROJ was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission data 
+      files
+NOTE: Libref ADAM was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission data 
+      files\Data\ADaM
+NOTE: Libref OUTTFL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: C:\Users\hed2\Downloads\Clinical_Trial_2025_DrugA_Phase3\08_Reports\Regulatory_Submission\Submission data 
+      files\Outputs\Table
+      ============================================================
+      Project Setup
+      ============================================================
+NOTE: ROOT          = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files
+NOTE: DIR_PROG      = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Programs
+NOTE: DIR_ADAM      = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Data/ADaM
+NOTE: DIR_TLFOUT    = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Outputs/Table
+NOTE: DIR_LOG       = C:/Users/hed2/Downloads/Clinical_Trial_2025_DrugA_Phase3/08_Reports/Regulatory_Submission/Submission data 
+files/Logs
+NOTE: SYSUSERID     = hed2
+NOTE: SYSHOSTNAME   = hdw02234493
+NOTE: SYSVLONG      = 9.04.01M5P091317
+NOTE: SYSENCODING   = wlatin1
+NOTE: SYSSCP        = WIN
+NOTE: RUN_DATETIME  = 2026-01-07T09:20:17
+2568  
+2569  %let PGNAME=ds_ana_sets;
+2570  %open_log(&PGNAME);
+
